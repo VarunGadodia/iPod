@@ -10,695 +10,490 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="theme-color" content="#16181c" />
 <style>
-  html, body { margin: 0; padding: 0; background: #16181c; overscroll-behavior: none; }
-  #root { min-height: 100vh; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #16181c; overscroll-behavior: none; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+  body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; user-select: none; -webkit-user-select: none; }
+
+  /* iPod body */
+  .ipod { width: 320px; max-width: 92vw; border-radius: 26px; background: linear-gradient(175deg, #f8f9fb 0%, #dfe2e8 45%, #c9ccd4 100%); box-shadow: 0 22px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 6px rgba(0,0,0,0.15); padding: 22px 20px 26px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+
+  /* Screen bezel */
+  .bezel { width: 100%; border-radius: 8px; background: linear-gradient(180deg, #1c1e22, #2e3138); padding: 7px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.7); }
+  .screen { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 4px; overflow: hidden; background: linear-gradient(180deg, #eef3ec 0%, #dde5da 100%); box-shadow: inset 0 0 12px rgba(60,80,60,0.25); color: #1e241e; font-size: 11px; display: flex; flex-direction: column; }
+
+  /* Status bar */
+  .status-bar { display: flex; align-items: center; justify-content: space-between; padding: 3px 8px; font-size: 10px; background: linear-gradient(180deg, #cfd8cc, #b9c4b6); border-bottom: 1px solid #97a394; flex-shrink: 0; z-index: 2; }
+  .battery { width: 22px; height: 10px; border: 1.5px solid #445044; border-radius: 2px; display: inline-block; padding: 1px; }
+  .battery-fill { display: block; width: 78%; height: 100%; background: #4d6b4d; border-radius: 1px; }
+
+  /* Menu list */
+  .menu-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+  .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; font-size: 11.5px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .menu-row.selected { background: linear-gradient(180deg, #5f8fd4, #2e5ea8); color: #fff; font-weight: 600; }
+  .menu-row .label { overflow: hidden; text-overflow: ellipsis; flex: 1; }
+  .menu-row .arrow { margin-left: 6px; flex-shrink: 0; }
+
+  /* Add music input */
+  .add-area { padding: 10px; display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto; }
+  .add-area input { font-size: 11px; padding: 6px; border-radius: 3px; border: 1px solid #9aa79a; background: #f2f6f0; width: 100%; font-family: inherit; }
+  .add-area .btn { font-size: 11px; font-weight: 700; padding: 7px 8px; border-radius: 4px; border: 1px solid #7f8d7d; background: #aebfaa; color: #1e241e; cursor: pointer; font-family: inherit; text-align: center; }
+  .add-area .btn:active { background: #98ab94; }
+  .add-area .hint { font-size: 9px; opacity: 0.65; line-height: 1.4; }
+
+  /* Embed player */
+  .embed-wrap { flex: 1; display: flex; flex-direction: column; position: relative; }
+  .embed-wrap iframe { flex: 1; width: 100%; border: none; border-radius: 0; }
+
+  /* Flash message */
+  .flash { position: absolute; bottom: 6px; left: 8px; right: 8px; background: rgba(30,36,30,0.9); color: #eef3ec; font-size: 9.5px; padding: 5px 8px; border-radius: 4px; text-align: center; z-index: 10; pointer-events: none; animation: flashFade 1.8s forwards; }
+  @keyframes flashFade { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
+
+  /* Click wheel */
+  .wheel { position: relative; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fbfcfd, #dfe3e9 55%, #c6cbd4 100%); box-shadow: inset 0 2px 6px rgba(255,255,255,0.9), inset 0 -3px 8px rgba(0,0,0,0.18), 0 3px 10px rgba(0,0,0,0.25); touch-action: none; cursor: grab; }
+  .wheel-btn { position: absolute; border: none; background: transparent; color: #8a8f99; font-size: 11px; font-weight: 700; letter-spacing: 1px; cursor: pointer; padding: 8px; font-family: inherit; }
+  .wheel-btn.top { top: 8px; left: 50%; transform: translateX(-50%); }
+  .wheel-btn.left { left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; }
+  .wheel-btn.right { right: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; }
+  .wheel-btn.bottom { bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 12px; }
+  .center-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 74px; height: 74px; border-radius: 50%; border: none; cursor: pointer; background: radial-gradient(circle at 38% 32%, #eef0f4, #cdd1d9 60%, #b8bdc7 100%); box-shadow: inset 0 2px 4px rgba(255,255,255,0.85), inset 0 -2px 5px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.25); }
+
+  .footer-hint { margin-top: 14px; font-size: 11px; color: #8a8f99; text-align: center; }
+
+  /* Delete button */
+  .del-btn { font-size: 9px; color: #9a4444; cursor: pointer; flex-shrink: 0; margin-left: 4px; padding: 2px 4px; }
 </style>
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel" data-presets="react">
-const { useState, useEffect, useRef, useCallback } = React;
-/* ============================================================
-   iPod Classic × Spotify
-   - Deploy to Vercel/Netlify, add your Spotify Client ID
-   - In this preview, use Demo Mode to try the interface
-   ============================================================ */
 
-// ---------- Safe storage (falls back to memory in sandboxed previews) ----------
-const memStore = {};
-const store = {
-  get(k) {
-    try { return window.localStorage.getItem(k); } catch { return memStore[k] ?? null; }
-  },
-  set(k, v) {
-    try { window.localStorage.setItem(k, v); } catch { memStore[k] = v; }
-  },
-  del(k) {
-    try { window.localStorage.removeItem(k); } catch { delete memStore[k]; }
-  },
+<div class="ipod">
+  <div class="bezel">
+    <div class="screen" id="screen"></div>
+  </div>
+  <div class="wheel" id="wheel">
+    <button class="wheel-btn top" id="btnMenu">MENU</button>
+    <button class="wheel-btn left" id="btnPrev">⏮</button>
+    <button class="wheel-btn right" id="btnNext">⏭</button>
+    <button class="wheel-btn bottom" id="btnPlay">⏯</button>
+    <button class="center-btn" id="btnSelect"></button>
+  </div>
+</div>
+<div class="footer-hint">Drag around the wheel to scroll · center selects · MENU goes back</div>
+
+<script>
+// ── Safe Storage ──
+const mem = {};
+const S = {
+  get(k) { try { return localStorage.getItem(k); } catch { return mem[k] ?? null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { mem[k] = v; } },
 };
 
-// ---------- Spotify PKCE OAuth ----------
-const SCOPES = [
-  "user-read-playback-state",
-  "user-modify-playback-state",
-  "user-read-currently-playing",
-  "playlist-read-private",
-  "user-library-read",
-  "user-top-read",
-].join(" ");
+// ── Library (persisted) ──
+function loadLibrary() {
+  try { return JSON.parse(S.get('ipod_lib') || '[]'); } catch { return []; }
+}
+function saveLibrary(lib) { S.set('ipod_lib', JSON.stringify(lib)); }
 
-function randomString(len) {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const vals = crypto.getRandomValues(new Uint8Array(len));
-  return Array.from(vals).map(v => chars[v % chars.length]).join("");
+// ── Parse Spotify URL ──
+function parseSpotifyUrl(url) {
+  // https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M
+  // https://open.spotify.com/album/4aawyAB9vmqN3uQ7FjRGTy
+  // https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh
+  // spotify:playlist:37i9dQZF1DXcBWIGoYBM5M
+  const urlMatch = url.match(/open\.spotify\.com\/(playlist|album|track)\/([a-zA-Z0-9]+)/);
+  if (urlMatch) return { type: urlMatch[1], id: urlMatch[2] };
+  const uriMatch = url.match(/spotify:(playlist|album|track):([a-zA-Z0-9]+)/);
+  if (uriMatch) return { type: uriMatch[1], id: uriMatch[2] };
+  return null;
 }
-async function sha256base64url(str) {
-  const data = new TextEncoder().encode(str);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return btoa(String.fromCharCode(...new Uint8Array(digest)))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+function embedUrl(type, id) {
+  return `https://open.spotify.com/embed/${type}/${id}?utm_source=generator&theme=0`;
 }
-async function beginLogin(clientId) {
-  const verifier = randomString(64);
-  store.set("sp_verifier", verifier);
-  store.set("sp_client_id", clientId);
-  const challenge = await sha256base64url(verifier);
-  const redirect = window.location.origin + window.location.pathname;
-  const params = new URLSearchParams({
-    client_id: clientId,
-    response_type: "code",
-    redirect_uri: redirect,
-    scope: SCOPES,
-    code_challenge_method: "S256",
-    code_challenge: challenge,
+
+// ── Fetch metadata via oEmbed ──
+async function fetchMeta(type, id) {
+  try {
+    const url = `https://open.spotify.com/${type}/${id}`;
+    const res = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return { title: data.title || 'Unknown', thumbnail: data.thumbnail_url || null };
+  } catch { return null; }
+}
+
+// ── State ──
+let library = loadLibrary();
+let navStack = []; // each: { title, items, type }
+let selIndex = 0;
+let currentView = 'menu'; // 'menu' | 'player' | 'add'
+let currentEmbed = null; // { type, id, title }
+let flashTimer = null;
+
+const screen = document.getElementById('screen');
+
+// ── Rendering ──
+function render() {
+  screen.innerHTML = '';
+  if (currentView === 'add') renderAdd();
+  else if (currentView === 'player') renderPlayer();
+  else renderMenu();
+}
+
+function statusBar(title, extra) {
+  return `<div class="status-bar">
+    <span style="width:30px">${extra || ''}</span>
+    <span style="font-weight:700">${title}</span>
+    <span class="battery"><span class="battery-fill"></span></span>
+  </div>`;
+}
+
+function renderMenu() {
+  const frame = navStack[navStack.length - 1];
+  if (!frame) return;
+  const VISIBLE = 7;
+  let start = Math.max(0, Math.min(selIndex - 3, frame.items.length - VISIBLE));
+  const visible = frame.items.slice(start, start + VISIBLE);
+
+  let html = statusBar(frame.title, currentEmbed ? '▶' : '');
+  html += '<div class="menu-area">';
+  visible.forEach((item, i) => {
+    const idx = start + i;
+    const sel = idx === selIndex ? ' selected' : '';
+    html += `<div class="menu-row${sel}" data-idx="${idx}">
+      <span class="label">${item.label}${item.sub ? ` <span style="opacity:0.6;font-size:9px">— ${item.sub}</span>` : ''}</span>
+      <span class="arrow">${idx === selIndex ? '›' : ''}</span>
+    </div>`;
   });
-  window.location.href = "https://accounts.spotify.com/authorize?" + params;
-}
-async function exchangeCode(code) {
-  const redirect = window.location.origin + window.location.pathname;
-  const body = new URLSearchParams({
-    client_id: store.get("sp_client_id"),
-    grant_type: "authorization_code",
-    code,
-    redirect_uri: redirect,
-    code_verifier: store.get("sp_verifier"),
-  });
-  const res = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (!res.ok) throw new Error("Token exchange failed");
-  const json = await res.json();
-  store.set("sp_token", json.access_token);
-  store.set("sp_refresh", json.refresh_token);
-  store.set("sp_expiry", String(Date.now() + json.expires_in * 1000));
-  return json.access_token;
-}
-async function refreshToken() {
-  const refresh = store.get("sp_refresh");
-  if (!refresh) return null;
-  const body = new URLSearchParams({
-    client_id: store.get("sp_client_id"),
-    grant_type: "refresh_token",
-    refresh_token: refresh,
-  });
-  const res = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (!res.ok) return null;
-  const json = await res.json();
-  store.set("sp_token", json.access_token);
-  if (json.refresh_token) store.set("sp_refresh", json.refresh_token);
-  store.set("sp_expiry", String(Date.now() + json.expires_in * 1000));
-  return json.access_token;
-}
-async function getToken() {
-  const expiry = Number(store.get("sp_expiry") || 0);
-  let token = store.get("sp_token");
-  if (!token) return null;
-  if (Date.now() > expiry - 60000) token = await refreshToken();
-  return token;
-}
-async function api(path, opts = {}) {
-  const token = await getToken();
-  if (!token) throw new Error("Not authenticated");
-  const res = await fetch("https://api.spotify.com/v1" + path, {
-    ...opts,
-    headers: { Authorization: "Bearer " + token, "Content-Type": "application/json", ...(opts.headers || {}) },
-  });
-  if (res.status === 204) return null;
-  if (!res.ok) throw new Error("API " + res.status);
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
-}
+  html += '</div>';
+  screen.innerHTML = html;
 
-// ---------- Demo data ----------
-const DEMO = {
-  playlists: [
-    { id: "d1", name: "Late Night Drive", tracks: 42 },
-    { id: "d2", name: "Gym — Heavy", tracks: 31 },
-    { id: "d3", name: "Sunday Chill", tracks: 58 },
-    { id: "d4", name: "2000s Throwback", tracks: 74 },
-  ],
-  tracks: [
-    { id: "t1", name: "Midnight City", artist: "M83", album: "Hurry Up, We're Dreaming", duration: 244 },
-    { id: "t2", name: "Instant Crush", artist: "Daft Punk", album: "Random Access Memories", duration: 337 },
-    { id: "t3", name: "Electric Feel", artist: "MGMT", album: "Oracular Spectacular", duration: 229 },
-    { id: "t4", name: "Nightcall", artist: "Kavinsky", album: "OutRun", duration: 258 },
-    { id: "t5", name: "The Less I Know the Better", artist: "Tame Impala", album: "Currents", duration: 216 },
-    { id: "t6", name: "Take On Me", artist: "a-ha", album: "Hunting High and Low", duration: 225 },
-    { id: "t7", name: "Digital Love", artist: "Daft Punk", album: "Discovery", duration: 301 },
-  ],
-};
-
-// ---------- Formatting ----------
-const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-
-// ============================================================
-function IPodSpotify() {
-  // mode: "setup" | "demo" | "live"
-  const [mode, setMode] = useState("setup");
-  const [clientId, setClientId] = useState("");
-  const [authError, setAuthError] = useState("");
-
-  // Navigation stack: each frame { title, items, type }
-  const [stack, setStack] = useState([]);
-  const [selIndex, setSelIndex] = useState(0);
-  const [screen, setScreen] = useState("menu"); // "menu" | "nowplaying"
-
-  // Playback state
-  const [np, setNp] = useState(null); // {name, artist, album, art, duration, progress, playing}
-  const [demoQueue, setDemoQueue] = useState({ list: DEMO.tracks, idx: 0, playing: false, progress: 0 });
-  const [flash, setFlash] = useState("");
-
-  const flashMsg = m => { setFlash(m); setTimeout(() => setFlash(""), 1800); };
-
-  // ---------- Startup: handle OAuth redirect ----------
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    if (code) {
-      exchangeCode(code)
-        .then(() => {
-          window.history.replaceState({}, "", window.location.pathname);
-          setMode("live");
-        })
-        .catch(() => setAuthError("Sign-in failed. Check your Client ID and redirect URI, then try again."));
-    } else if (store.get("sp_token")) {
-      setMode("live");
-    }
-  }, []);
-
-  // ---------- Root menu ----------
-  const rootMenu = useCallback(() => ({
-    title: "iPod",
-    type: "root",
-    items: [
-      { label: "Music", action: "music" },
-      { label: "Now Playing", action: "nowplaying" },
-      { label: "Shuffle Songs", action: "shuffle" },
-      { label: "Settings", action: "settings" },
-    ],
-  }), []);
-
-  useEffect(() => {
-    if (mode !== "setup") { setStack([rootMenu()]); setSelIndex(0); }
-  }, [mode, rootMenu]);
-
-  // ---------- Live polling of Spotify playback ----------
-  useEffect(() => {
-    if (mode !== "live") return;
-    let alive = true;
-    const poll = async () => {
-      try {
-        const d = await api("/me/player");
-        if (!alive) return;
-        if (d && d.item) {
-          setNp({
-            name: d.item.name,
-            artist: d.item.artists.map(a => a.name).join(", "),
-            album: d.item.album?.name || "",
-            art: d.item.album?.images?.[1]?.url || d.item.album?.images?.[0]?.url || null,
-            duration: d.item.duration_ms / 1000,
-            progress: d.progress_ms / 1000,
-            playing: d.is_playing,
-          });
-        } else setNp(null);
-      } catch { /* token issues surface elsewhere */ }
-    };
-    poll();
-    const t = setInterval(poll, 3000);
-    return () => { alive = false; clearInterval(t); };
-  }, [mode]);
-
-  // ---------- Demo playback ticker ----------
-  useEffect(() => {
-    if (mode !== "demo") return;
-    const t = setInterval(() => {
-      setDemoQueue(q => {
-        if (!q.playing) return q;
-        const track = q.list[q.idx];
-        let p = q.progress + 1;
-        if (p >= track.duration) return { ...q, idx: (q.idx + 1) % q.list.length, progress: 0 };
-        return { ...q, progress: p };
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, [mode]);
-
-  useEffect(() => {
-    if (mode !== "demo") return;
-    const track = demoQueue.list[demoQueue.idx];
-    setNp({
-      name: track.name, artist: track.artist, album: track.album, art: null,
-      duration: track.duration, progress: demoQueue.progress, playing: demoQueue.playing,
+  // Click on rows
+  screen.querySelectorAll('.menu-row').forEach(row => {
+    row.addEventListener('click', () => {
+      selIndex = parseInt(row.dataset.idx);
+      render();
     });
-  }, [mode, demoQueue]);
-
-  // ---------- Menu data loaders ----------
-  const pushFrame = f => { setStack(s => [...s, f]); setSelIndex(0); };
-
-  const openMusic = () => pushFrame({
-    title: "Music", type: "menu",
-    items: [
-      { label: "Playlists", action: "playlists" },
-      { label: "Songs", action: "songs" },
-      { label: "Top Tracks", action: "top" },
-    ],
   });
-
-  const loadList = async (action) => {
-    if (mode === "demo") {
-      if (action === "playlists")
-        pushFrame({ title: "Playlists", type: "menu", items: DEMO.playlists.map(p => ({ label: p.name, action: "demo-playlist", data: p })) });
-      else
-        pushFrame({ title: action === "top" ? "Top Tracks" : "Songs", type: "tracks", items: DEMO.tracks.map((t, i) => ({ label: t.name, sub: t.artist, action: "demo-play", data: i })) });
-      return;
-    }
-    try {
-      if (action === "playlists") {
-        const d = await api("/me/playlists?limit=50");
-        pushFrame({ title: "Playlists", type: "menu",
-          items: d.items.filter(Boolean).map(p => ({ label: p.name, action: "playlist", data: p })) });
-      } else if (action === "songs") {
-        const d = await api("/me/tracks?limit=50");
-        pushFrame({ title: "Songs", type: "tracks",
-          items: d.items.map(x => ({ label: x.track.name, sub: x.track.artists[0]?.name, action: "play-uri", data: x.track.uri })) });
-      } else if (action === "top") {
-        const d = await api("/me/top/tracks?limit=50");
-        pushFrame({ title: "Top Tracks", type: "tracks",
-          items: d.items.map(t => ({ label: t.name, sub: t.artists[0]?.name, action: "play-uri", data: t.uri })) });
-      }
-    } catch { flashMsg("Couldn't load. Open Spotify once, then retry."); }
-  };
-
-  const openPlaylist = async (p) => {
-    try {
-      const d = await api(`/playlists/${p.id}/tracks?limit=100`);
-      pushFrame({ title: p.name, type: "tracks",
-        items: d.items.filter(x => x.track).map(x => ({
-          label: x.track.name, sub: x.track.artists[0]?.name,
-          action: "play-context", data: { context: p.uri, uri: x.track.uri },
-        })) });
-    } catch { flashMsg("Couldn't load playlist."); }
-  };
-
-  const playUri = async (uri, context) => {
-    try {
-      const body = context ? { context_uri: context, offset: { uri } } : { uris: [uri] };
-      await api("/me/player/play", { method: "PUT", body: JSON.stringify(body) });
-      setScreen("nowplaying");
-    } catch {
-      flashMsg("No active device — open Spotify on your phone first.");
-    }
-  };
-
-  // ---------- Select handler ----------
-  const onSelect = () => {
-    if (screen === "nowplaying") return;
-    const frame = stack[stack.length - 1];
-    if (!frame) return;
-    const item = frame.items[selIndex];
-    if (!item) return;
-    switch (item.action) {
-      case "music": openMusic(); break;
-      case "nowplaying": setScreen("nowplaying"); break;
-      case "shuffle":
-        if (mode === "demo") { setDemoQueue(q => ({ ...q, idx: Math.floor(Math.random() * q.list.length), progress: 0, playing: true })); setScreen("nowplaying"); }
-        else { api("/me/player/shuffle?state=true", { method: "PUT" }).then(() => api("/me/player/next", { method: "POST" })).then(() => setScreen("nowplaying")).catch(() => flashMsg("No active device — open Spotify first.")); }
-        break;
-      case "settings":
-        pushFrame({ title: "Settings", type: "menu", items: [
-          { label: mode === "demo" ? "Mode: Demo" : "Mode: Spotify", action: "noop" },
-          { label: "Sign out", action: "signout" },
-          { label: "About", action: "about" },
-        ]});
-        break;
-      case "playlists": case "songs": case "top": loadList(item.action); break;
-      case "playlist": openPlaylist(item.data); break;
-      case "play-uri": playUri(item.data); break;
-      case "play-context": playUri(item.data.uri, item.data.context); break;
-      case "demo-playlist":
-        pushFrame({ title: item.data.name, type: "tracks", items: DEMO.tracks.map((t, i) => ({ label: t.name, sub: t.artist, action: "demo-play", data: i })) });
-        break;
-      case "demo-play":
-        setDemoQueue(q => ({ ...q, idx: item.data, progress: 0, playing: true }));
-        setScreen("nowplaying");
-        break;
-      case "signout":
-        store.del("sp_token"); store.del("sp_refresh"); store.del("sp_expiry");
-        setMode("setup"); setNp(null);
-        break;
-      case "about":
-        pushFrame({ title: "About", type: "about", items: [] });
-        break;
-      default: break;
-    }
-  };
-
-  // ---------- Menu / back ----------
-  const onMenu = () => {
-    if (screen === "nowplaying") { setScreen("menu"); return; }
-    if (stack.length > 1) { setStack(s => s.slice(0, -1)); setSelIndex(0); }
-  };
-
-  // ---------- Transport ----------
-  const onPlayPause = () => {
-    if (mode === "demo") setDemoQueue(q => ({ ...q, playing: !q.playing }));
-    else if (np) api(np.playing ? "/me/player/pause" : "/me/player/play", { method: "PUT" }).catch(() => flashMsg("No active device."));
-  };
-  const onNext = () => {
-    if (mode === "demo") setDemoQueue(q => ({ ...q, idx: (q.idx + 1) % q.list.length, progress: 0 }));
-    else api("/me/player/next", { method: "POST" }).catch(() => flashMsg("No active device."));
-  };
-  const onPrev = () => {
-    if (mode === "demo") setDemoQueue(q => ({ ...q, idx: (q.idx - 1 + q.list.length) % q.list.length, progress: 0 }));
-    else api("/me/player/previous", { method: "POST" }).catch(() => flashMsg("No active device."));
-  };
-
-  // ---------- Scroll ----------
-  const frame = stack[stack.length - 1];
-  const scrollBy = useCallback((delta) => {
-    if (screen === "nowplaying") return;
-    const f = stack[stack.length - 1];
-    if (!f || !f.items.length) return;
-    setSelIndex(i => Math.min(Math.max(i + delta, 0), f.items.length - 1));
-  }, [stack, screen]);
-
-  // ---------- Click wheel rotation gesture ----------
-  const wheelRef = useRef(null);
-  const angleRef = useRef(null);
-  const accumRef = useRef(0);
-
-  const angleOf = (e) => {
-    const rect = wheelRef.current.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-    const pt = e.touches ? e.touches[0] : e;
-    return Math.atan2(pt.clientY - cy, pt.clientX - cx);
-  };
-  const gestureStart = (e) => { angleRef.current = angleOf(e); accumRef.current = 0; };
-  const gestureMove = (e) => {
-    if (angleRef.current == null) return;
-    const a = angleOf(e);
-    let d = a - angleRef.current;
-    if (d > Math.PI) d -= 2 * Math.PI;
-    if (d < -Math.PI) d += 2 * Math.PI;
-    angleRef.current = a;
-    accumRef.current += d;
-    const STEP = 0.42; // radians per tick
-    while (accumRef.current > STEP) { scrollBy(1); accumRef.current -= STEP; clickTick(); }
-    while (accumRef.current < -STEP) { scrollBy(-1); accumRef.current += STEP; clickTick(); }
-  };
-  const gestureEnd = () => { angleRef.current = null; };
-
-  const audioCtxRef = useRef(null);
-  const clickTick = () => {
-    try {
-      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      const ctx = audioCtxRef.current;
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.frequency.value = 1800; g.gain.value = 0.03;
-      o.connect(g); g.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.015);
-    } catch { /* audio unavailable */ }
-  };
-
-  // Keyboard support
-  useEffect(() => {
-    const h = (e) => {
-      if (mode === "setup") return;
-      if (e.key === "ArrowDown") { e.preventDefault(); scrollBy(1); }
-      if (e.key === "ArrowUp") { e.preventDefault(); scrollBy(-1); }
-      if (e.key === "Enter") onSelect();
-      if (e.key === "Escape" || e.key === "Backspace") onMenu();
-      if (e.key === " ") { e.preventDefault(); onPlayPause(); }
-    };
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  });
-
-  // ---------- Battery-style clock ----------
-  const [now, setNow] = useState(new Date());
-  useEffect(() => { const t = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(t); }, []);
-
-  // ============================================================
-  // RENDER
-  // ============================================================
-
-  const visibleWindow = () => {
-    if (!frame) return [];
-    const VISIBLE = 7;
-    let start = Math.max(0, Math.min(selIndex - 3, frame.items.length - VISIBLE));
-    return frame.items.slice(start, start + VISIBLE).map((it, i) => ({ ...it, _idx: start + i }));
-  };
-
-  const S = styles;
-
-  // -------- Setup screen (rendered inside the iPod LCD) --------
-  const renderSetup = () => (
-    <div style={{ ...S.lcdInner, padding: 10, display: "flex", flexDirection: "column", gap: 8, overflowY: "auto" }}>
-      <div style={{ fontWeight: 700, fontSize: 13, textAlign: "center" }}>Connect Spotify</div>
-      <div style={{ fontSize: 10, lineHeight: 1.5 }}>
-        1. Go to <b>developer.spotify.com/dashboard</b>, create an app.<br />
-        2. Add this exact Redirect URI:<br />
-        <span style={{ fontSize: 9, wordBreak: "break-all", background: "#dfe6dc", padding: "1px 3px", borderRadius: 2 }}>
-          {typeof window !== "undefined" ? window.location.origin + window.location.pathname : ""}
-        </span><br />
-        3. Paste your Client ID below.
-      </div>
-      <input
-        value={clientId}
-        onChange={e => setClientId(e.target.value)}
-        placeholder="Spotify Client ID"
-        style={{ fontSize: 11, padding: "5px 6px", borderRadius: 3, border: "1px solid #9aa79a", background: "#f2f6f0", width: "100%", boxSizing: "border-box" }}
-      />
-      {authError && <div style={{ fontSize: 9, color: "#8a2222" }}>{authError}</div>}
-      <button onClick={() => clientId.trim() && beginLogin(clientId.trim())} style={S.lcdButton}>Sign in with Spotify</button>
-      <button onClick={() => { setMode("demo"); }} style={{ ...S.lcdButton, background: "#c8d2c6" }}>Try Demo Mode</button>
-      <div style={{ fontSize: 8.5, opacity: 0.7, lineHeight: 1.4 }}>
-        Sign-in requires this app to be deployed (Vercel, etc.). In this preview, use Demo Mode.
-      </div>
-    </div>
-  );
-
-  // -------- Menu screen --------
-  const renderMenu = () => (
-    <div style={S.lcdInner}>
-      <div style={S.statusBar}>
-        <span style={{ width: 30 }}>{np?.playing ? "▶" : np ? "❙❙" : ""}</span>
-        <span style={{ fontWeight: 700 }}>{frame?.title || "iPod"}</span>
-        <span style={S.battery}><span style={S.batteryFill} /></span>
-      </div>
-      {frame?.type === "about" ? (
-        <div style={{ padding: 12, fontSize: 10, lineHeight: 1.6 }}>
-          <b>iPod Classic × Spotify</b><br />
-          A pocket time machine.<br /><br />
-          Scroll the wheel. Press the center to select. MENU goes back.<br /><br />
-          {now.toLocaleDateString()}
-        </div>
-      ) : (
-        <div style={{ flex: 1, overflow: "hidden" }}>
-          {visibleWindow().map(it => (
-            <div key={it._idx}
-              onClick={() => { setSelIndex(it._idx); }}
-              style={{ ...S.menuRow, ...(it._idx === selIndex ? S.menuRowSel : {}) }}>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {it.label}{it.sub ? <span style={{ opacity: 0.65, fontSize: 9 }}> — {it.sub}</span> : null}
-              </span>
-              <span>{it._idx === selIndex ? "›" : ""}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  // -------- Now Playing screen --------
-  const renderNowPlaying = () => {
-    const pct = np && np.duration ? Math.min(100, (np.progress / np.duration) * 100) : 0;
-    return (
-      <div style={S.lcdInner}>
-        <div style={S.statusBar}>
-          <span style={{ width: 30 }}>{np?.playing ? "▶" : "❙❙"}</span>
-          <span style={{ fontWeight: 700 }}>Now Playing</span>
-          <span style={S.battery}><span style={S.batteryFill} /></span>
-        </div>
-        {np ? (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 12px", gap: 6 }}>
-            <div style={{ display: "flex", gap: 10, alignItems: "center", flex: 1 }}>
-              <div style={S.artBox}>
-                {np.art
-                  ? <img src={np.art} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : <div style={S.artPlaceholder}>♪</div>}
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{np.name}</div>
-                <div style={{ fontSize: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{np.artist}</div>
-                <div style={{ fontSize: 9, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{np.album}</div>
-              </div>
-            </div>
-            <div>
-              <div style={S.progressTrack}><div style={{ ...S.progressFill, width: pct + "%" }} /></div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, marginTop: 2 }}>
-                <span>{fmt(np.progress)}</span><span>-{fmt(Math.max(0, np.duration - np.progress))}</span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, opacity: 0.7, padding: 16, textAlign: "center" }}>
-            Nothing playing.{mode === "live" ? " Start Spotify on your phone, or pick a song from Music." : ""}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <div style={S.page}>
-      <div style={S.body}>
-        {/* LCD */}
-        <div style={S.lcdBezel}>
-          <div style={S.lcd}>
-            {mode === "setup" ? renderSetup() : screen === "nowplaying" ? renderNowPlaying() : renderMenu()}
-            {flash && <div style={S.flash}>{flash}</div>}
-          </div>
-        </div>
-
-        {/* Click wheel */}
-        <div
-          ref={wheelRef}
-          style={S.wheel}
-          onMouseDown={gestureStart} onMouseMove={gestureMove} onMouseUp={gestureEnd} onMouseLeave={gestureEnd}
-          onTouchStart={gestureStart} onTouchMove={gestureMove} onTouchEnd={gestureEnd}
-        >
-          <button aria-label="Menu" style={{ ...S.wheelBtn, top: 8, left: "50%", transform: "translateX(-50%)" }}
-            onClick={onMenu} onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); onMenu(); }}>MENU</button>
-          <button aria-label="Previous" style={{ ...S.wheelBtn, left: 10, top: "50%", transform: "translateY(-50%)", fontSize: 13 }}
-            onClick={onPrev} onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); onPrev(); }}>⏮</button>
-          <button aria-label="Next" style={{ ...S.wheelBtn, right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 13 }}
-            onClick={onNext} onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); onNext(); }}>⏭</button>
-          <button aria-label="Play / Pause" style={{ ...S.wheelBtn, bottom: 8, left: "50%", transform: "translateX(-50%)", fontSize: 12 }}
-            onClick={onPlayPause} onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); onPlayPause(); }}>⏯</button>
-          <button aria-label="Select"
-            style={S.centerBtn}
-            onClick={onSelect}
-            onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); onSelect(); }}
-          />
-        </div>
-      </div>
-      <div style={S.hint}>Drag around the wheel to scroll · center button selects · MENU goes back</div>
-    </div>
-  );
 }
 
-// ============================================================
-// Styles — iPod Classic (silver / black face)
-// ============================================================
-const styles = {
-  page: {
-    minHeight: "100vh",
-    background: "linear-gradient(160deg, #2a2d33 0%, #16181c 60%, #0c0d10 100%)",
-    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-    padding: 16, fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-    userSelect: "none", WebkitUserSelect: "none",
-  },
-  body: {
-    width: 320, maxWidth: "92vw",
-    borderRadius: 26,
-    background: "linear-gradient(175deg, #f8f9fb 0%, #dfe2e8 45%, #c9ccd4 100%)",
-    boxShadow: "0 22px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 6px rgba(0,0,0,0.15)",
-    padding: "22px 20px 26px",
-    display: "flex", flexDirection: "column", alignItems: "center", gap: 26,
-  },
-  lcdBezel: {
-    width: "100%", borderRadius: 8,
-    background: "linear-gradient(180deg, #1c1e22, #2e3138)",
-    padding: 7,
-    boxShadow: "inset 0 2px 5px rgba(0,0,0,0.7)",
-  },
-  lcd: {
-    position: "relative",
-    width: "100%", aspectRatio: "4 / 3",
-    borderRadius: 4, overflow: "hidden",
-    background: "linear-gradient(180deg, #eef3ec 0%, #dde5da 100%)",
-    boxShadow: "inset 0 0 12px rgba(60,80,60,0.25)",
-    color: "#1e241e",
-  },
-  lcdInner: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", fontSize: 11 },
-  statusBar: {
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "3px 8px", fontSize: 10,
-    background: "linear-gradient(180deg, #cfd8cc, #b9c4b6)",
-    borderBottom: "1px solid #97a394",
-  },
-  battery: {
-    width: 22, height: 10, border: "1.5px solid #445044", borderRadius: 2,
-    display: "inline-block", position: "relative", padding: 1, boxSizing: "border-box",
-  },
-  batteryFill: { display: "block", width: "78%", height: "100%", background: "#4d6b4d", borderRadius: 1 },
-  menuRow: {
-    display: "flex", justifyContent: "space-between", alignItems: "center",
-    padding: "4px 10px", fontSize: 11.5, cursor: "pointer", gap: 6,
-  },
-  menuRowSel: {
-    background: "linear-gradient(180deg, #5f8fd4, #2e5ea8)",
-    color: "#fff", fontWeight: 600,
-  },
-  artBox: {
-    width: 74, height: 74, flexShrink: 0, borderRadius: 3, overflow: "hidden",
-    boxShadow: "2px 3px 6px rgba(0,0,0,0.3)", background: "#c3cdc0",
-  },
-  artPlaceholder: {
-    width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 30, color: "#7a877a",
-  },
-  progressTrack: {
-    height: 8, borderRadius: 4, overflow: "hidden",
-    background: "linear-gradient(180deg, #b7c2b4, #cfd8cc)",
-    boxShadow: "inset 0 1px 2px rgba(0,0,0,0.25)",
-  },
-  progressFill: {
-    height: "100%",
-    background: "linear-gradient(180deg, #79a4e0, #35639f)",
-  },
-  wheel: {
-    position: "relative",
-    width: 200, height: 200, borderRadius: "50%",
-    background: "radial-gradient(circle at 35% 30%, #fbfcfd, #dfe3e9 55%, #c6cbd4 100%)",
-    boxShadow: "inset 0 2px 6px rgba(255,255,255,0.9), inset 0 -3px 8px rgba(0,0,0,0.18), 0 3px 10px rgba(0,0,0,0.25)",
-    touchAction: "none", cursor: "grab",
-  },
-  wheelBtn: {
-    position: "absolute", border: "none", background: "transparent",
-    color: "#8a8f99", fontSize: 11, fontWeight: 700, letterSpacing: 1,
-    cursor: "pointer", padding: 8, fontFamily: "inherit",
-  },
-  centerBtn: {
-    position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-    width: 74, height: 74, borderRadius: "50%", border: "none", cursor: "pointer",
-    background: "radial-gradient(circle at 38% 32%, #eef0f4, #cdd1d9 60%, #b8bdc7 100%)",
-    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.85), inset 0 -2px 5px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.25)",
-  },
-  lcdButton: {
-    fontSize: 11, fontWeight: 700, padding: "7px 8px", borderRadius: 4,
-    border: "1px solid #7f8d7d", background: "#aebfaa", color: "#1e241e",
-    cursor: "pointer", fontFamily: "inherit",
-  },
-  flash: {
-    position: "absolute", bottom: 8, left: 10, right: 10,
-    background: "rgba(30,36,30,0.88)", color: "#eef3ec",
-    fontSize: 9.5, padding: "5px 8px", borderRadius: 4, textAlign: "center",
-  },
-  hint: { marginTop: 14, fontSize: 11, color: "#8a8f99", textAlign: "center" },
-};
-ReactDOM.createRoot(document.getElementById("root")).render(<IPodSpotify />);
+function renderPlayer() {
+  if (!currentEmbed) { currentView = 'menu'; render(); return; }
+  let html = statusBar('Now Playing', '▶');
+  html += `<div class="embed-wrap">
+    <iframe src="${embedUrl(currentEmbed.type, currentEmbed.id)}" 
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+      loading="lazy"></iframe>
+  </div>`;
+  screen.innerHTML = html;
+}
+
+function renderAdd() {
+  let html = statusBar('Add Music');
+  html += `<div class="add-area">
+    <div style="font-weight:700;font-size:12px;text-align:center">Add from Spotify</div>
+    <div class="hint">
+      Open Spotify → tap Share on any playlist, album, or song → Copy Link → paste below
+    </div>
+    <input id="urlInput" placeholder="Paste Spotify link here..." />
+    <div class="btn" id="addBtn">Add to iPod</div>
+    <div class="hint" style="margin-top:4px">
+      Works with playlists, albums, and tracks.<br>
+      Example: open.spotify.com/playlist/37i9...
+    </div>
+    <div id="addStatus"></div>
+  </div>`;
+  screen.innerHTML = html;
+
+  document.getElementById('addBtn').addEventListener('click', addFromInput);
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addFromInput();
+  });
+  // Focus input after tiny delay (mobile keyboard)
+  setTimeout(() => document.getElementById('urlInput')?.focus(), 100);
+}
+
+async function addFromInput() {
+  const input = document.getElementById('urlInput');
+  const status = document.getElementById('addStatus');
+  if (!input || !status) return;
+  const val = input.value.trim();
+  if (!val) { flash('Paste a Spotify link first'); return; }
+
+  const parsed = parseSpotifyUrl(val);
+  if (!parsed) { flash('Not a valid Spotify link'); return; }
+
+  // Check duplicate
+  if (library.some(item => item.id === parsed.id)) { flash('Already in your library'); return; }
+
+  status.innerHTML = '<span style="font-size:10px">Loading...</span>';
+
+  const meta = await fetchMeta(parsed.type, parsed.id);
+  const entry = {
+    type: parsed.type,
+    id: parsed.id,
+    title: meta?.title || `${parsed.type} · ${parsed.id.slice(0,8)}`,
+    thumbnail: meta?.thumbnail || null,
+    added: Date.now(),
+  };
+  library.push(entry);
+  saveLibrary(library);
+
+  input.value = '';
+  flash(`Added: ${entry.title}`);
+  status.innerHTML = `<span style="font-size:10px;color:#3a6a3a">✓ ${entry.title}</span>`;
+}
+
+function flash(msg) {
+  const existing = screen.querySelector('.flash');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'flash';
+  el.textContent = msg;
+  screen.appendChild(el);
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => el.remove(), 1800);
+}
+
+// ── Menu Structure ──
+function buildRoot() {
+  return {
+    title: 'iPod',
+    type: 'root',
+    items: [
+      { label: 'Music', action: 'music' },
+      { label: 'Now Playing', action: 'nowplaying' },
+      { label: 'Add Music', action: 'add' },
+      { label: 'Settings', action: 'settings' },
+    ],
+  };
+}
+
+function buildMusic() {
+  const items = [];
+  const playlists = library.filter(x => x.type === 'playlist');
+  const albums = library.filter(x => x.type === 'album');
+  const tracks = library.filter(x => x.type === 'track');
+  if (playlists.length) items.push({ label: 'Playlists', action: 'cat', data: 'playlist' });
+  if (albums.length) items.push({ label: 'Albums', action: 'cat', data: 'album' });
+  if (tracks.length) items.push({ label: 'Songs', action: 'cat', data: 'track' });
+  if (!items.length) items.push({ label: 'No music yet', sub: 'go back & tap Add Music', action: 'noop' });
+  return { title: 'Music', type: 'menu', items };
+}
+
+function buildCategory(type) {
+  const titles = { playlist: 'Playlists', album: 'Albums', track: 'Songs' };
+  const items = library.filter(x => x.type === type).map(x => ({
+    label: x.title, action: 'play', data: x,
+  }));
+  return { title: titles[type] || 'Music', type: 'menu', items };
+}
+
+function buildSettings() {
+  return {
+    title: 'Settings',
+    type: 'menu',
+    items: [
+      { label: `Library: ${library.length} item${library.length !== 1 ? 's' : ''}`, action: 'noop' },
+      { label: 'Manage Library', action: 'manage' },
+      { label: 'About', action: 'about' },
+    ],
+  };
+}
+
+function buildManage() {
+  if (!library.length) return { title: 'Library', type: 'menu', items: [{ label: 'Empty', action: 'noop' }] };
+  const items = library.map((x, i) => ({
+    label: x.title, sub: x.type, action: 'remove', data: i,
+  }));
+  items.push({ label: '← Back', action: 'back' });
+  return { title: 'Manage', type: 'menu', items };
+}
+
+// ── Init ──
+navStack = [buildRoot()];
+selIndex = 0;
+render();
+
+// ── Actions ──
+function onSelect() {
+  if (currentView === 'player') return; // embed handles interaction
+  if (currentView === 'add') return; // input handles interaction
+
+  const frame = navStack[navStack.length - 1];
+  if (!frame || !frame.items.length) return;
+  const item = frame.items[selIndex];
+  if (!item) return;
+
+  switch (item.action) {
+    case 'music':
+      navStack.push(buildMusic());
+      selIndex = 0;
+      render();
+      break;
+    case 'cat':
+      navStack.push(buildCategory(item.data));
+      selIndex = 0;
+      render();
+      break;
+    case 'play':
+      currentEmbed = { type: item.data.type, id: item.data.id, title: item.data.title };
+      currentView = 'player';
+      render();
+      break;
+    case 'nowplaying':
+      if (currentEmbed) { currentView = 'player'; render(); }
+      else flash('Nothing playing yet');
+      break;
+    case 'add':
+      currentView = 'add';
+      render();
+      break;
+    case 'settings':
+      navStack.push(buildSettings());
+      selIndex = 0;
+      render();
+      break;
+    case 'manage':
+      navStack.push(buildManage());
+      selIndex = 0;
+      render();
+      break;
+    case 'remove':
+      const name = library[item.data]?.title;
+      library.splice(item.data, 1);
+      saveLibrary(library);
+      flash(`Removed: ${name}`);
+      navStack[navStack.length - 1] = buildManage();
+      selIndex = Math.min(selIndex, navStack[navStack.length - 1].items.length - 1);
+      render();
+      break;
+    case 'about':
+      navStack.push({ title: 'About', type: 'menu', items: [
+        { label: 'iPod Classic × Spotify', action: 'noop' },
+        { label: 'Scroll the wheel to browse', action: 'noop' },
+        { label: 'Center button = select', action: 'noop' },
+        { label: 'MENU = go back', action: 'noop' },
+      ]});
+      selIndex = 0;
+      render();
+      break;
+    case 'back':
+      onMenu();
+      break;
+    default: break;
+  }
+}
+
+function onMenu() {
+  if (currentView === 'player') { currentView = 'menu'; render(); return; }
+  if (currentView === 'add') { currentView = 'menu'; render(); return; }
+  if (navStack.length > 1) { navStack.pop(); selIndex = 0; render(); }
+}
+
+function scrollBy(delta) {
+  if (currentView !== 'menu') return;
+  const frame = navStack[navStack.length - 1];
+  if (!frame || !frame.items.length) return;
+  selIndex = Math.min(Math.max(selIndex + delta, 0), frame.items.length - 1);
+  render();
+  clickTick();
+}
+
+// ── Click Wheel Gesture ──
+const wheel = document.getElementById('wheel');
+let lastAngle = null;
+let accum = 0;
+
+function angleOf(e) {
+  const rect = wheel.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+  const pt = e.touches ? e.touches[0] : e;
+  return Math.atan2(pt.clientY - cy, pt.clientX - cx);
+}
+function gestureStart(e) { lastAngle = angleOf(e); accum = 0; }
+function gestureMove(e) {
+  if (lastAngle === null) return;
+  const a = angleOf(e);
+  let d = a - lastAngle;
+  if (d > Math.PI) d -= 2 * Math.PI;
+  if (d < -Math.PI) d += 2 * Math.PI;
+  lastAngle = a;
+  accum += d;
+  const STEP = 0.42;
+  while (accum > STEP) { scrollBy(1); accum -= STEP; }
+  while (accum < -STEP) { scrollBy(-1); accum += STEP; }
+}
+function gestureEnd() { lastAngle = null; }
+
+wheel.addEventListener('mousedown', gestureStart);
+wheel.addEventListener('mousemove', gestureMove);
+wheel.addEventListener('mouseup', gestureEnd);
+wheel.addEventListener('mouseleave', gestureEnd);
+wheel.addEventListener('touchstart', gestureStart, { passive: true });
+wheel.addEventListener('touchmove', gestureMove, { passive: true });
+wheel.addEventListener('touchend', gestureEnd);
+
+// ── Audio tick ──
+let audioCtx = null;
+function clickTick() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = 1800; g.gain.value = 0.025;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.012);
+  } catch {}
+}
+
+// ── Buttons ──
+document.getElementById('btnMenu').addEventListener('click', e => { e.stopPropagation(); onMenu(); });
+document.getElementById('btnSelect').addEventListener('click', e => { e.stopPropagation(); onSelect(); });
+document.getElementById('btnPrev').addEventListener('click', e => { e.stopPropagation(); });
+document.getElementById('btnNext').addEventListener('click', e => { e.stopPropagation(); });
+document.getElementById('btnPlay').addEventListener('click', e => { e.stopPropagation(); });
+
+// Touch events for buttons (prevent wheel gesture interference)
+['btnMenu','btnSelect','btnPrev','btnNext','btnPlay'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('touchend', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (id === 'btnMenu') onMenu();
+    else if (id === 'btnSelect') onSelect();
+  });
+});
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  if (currentView === 'add' && e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); scrollBy(1); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); scrollBy(-1); }
+  if (e.key === 'Enter') onSelect();
+  if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); onMenu(); }
+});
+
+// ── Pre-load starter playlists so it's not empty ──
+(async function preload() {
+  if (library.length > 0) return; // user already has music
+  const starters = [
+    { type: 'playlist', id: '37i9dQZF1DXcBWIGoYBM5M' }, // Today's Top Hits
+    { type: 'playlist', id: '37i9dQZF1DX0XUsuxWHRQd' }, // RapCaviar
+    { type: 'playlist', id: '37i9dQZF1DWXRqgorJj26U' }, // Rock Classics
+    { type: 'playlist', id: '37i9dQZF1DX4sWSpwq3LiO' }, // Peaceful Piano
+  ];
+  for (const s of starters) {
+    const meta = await fetchMeta(s.type, s.id);
+    if (meta) {
+      library.push({ type: s.type, id: s.id, title: meta.title, thumbnail: meta.thumbnail, added: Date.now() });
+    }
+  }
+  if (library.length) {
+    saveLibrary(library);
+    navStack = [buildRoot()];
+    selIndex = 0;
+    render();
+  }
+})();
 </script>
 </body>
 </html>
